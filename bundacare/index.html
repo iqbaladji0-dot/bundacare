@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BundaCare - Hadir untuk Bunda, Tumbuh Bersama si Kecil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --highlight: #FF8B94; --primary: #FFB7B2;
+            --secondary: #B2E2F2; --accent: #E2F0CB;
+            --text: #4A4A4A; --bg: #FDFBFF; --white: #FFFFFF;
+            --purple: #E0BBE4; --peach: #FFDAC1; --teal: #B2DFDB; --yellow: #FDFD96;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: 'Quicksand', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        #loginPage {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+            background: linear-gradient(135deg, #fff5f5 0%, #fdfbff 50%, #f0f8ff 100%);
+        }
+        .login-box { background: white; border-radius: 28px; padding: 40px 30px; width: 100%; max-width: 380px; box-shadow: 0 10px 40px rgba(255,139,148,0.15); text-align: center; }
+        .login-logo { font-size: 2.5rem; margin-bottom: 8px; }
+        .login-box h1 { color: var(--highlight); font-size: 1.6rem; margin-bottom: 6px; }
+        .login-box p { color: #999; font-size: 0.85rem; margin-bottom: 28px; line-height: 1.5; }
+        .login-input { width: 100%; border: 2px solid #F0F0F0; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 0.95rem; outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
+        .login-input:focus { border-color: var(--primary); }
+        .login-btn { width: 100%; padding: 15px; background: var(--highlight); color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .login-btn:disabled { opacity: 0.6; }
+        .login-error { color: #e74c3c; font-size: 0.82rem; margin-top: 10px; display: none; }
+
+        #appPage { display: none; }
+        .top-bar { background: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .top-bar-brand { color: var(--highlight); font-weight: 700; font-size: 1.1rem; }
+        .top-bar-greeting { font-size: 0.78rem; color: #999; }
+        .logout-btn { background: #f5f5f5; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; color: #888; cursor: pointer; font-family: inherit; }
+
+        .container { max-width: 500px; width: 100%; margin: 0 auto; padding: 20px; }
+        header { text-align: center; margin-bottom: 22px; padding-top: 8px; }
+        header h1 { color: var(--highlight); font-size: 1.6rem; margin-bottom: 4px; }
+        header p { font-size: 0.86rem; color: #aaa; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .menu-grid-full { grid-column: 1 / -1; }
+        .menu-card { padding: 14px; border-radius: 18px; cursor: pointer; font-weight: 700; transition: transform 0.2s; border: none; box-shadow: 0 3px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 4px; font-family: inherit; text-align: left; }
+        .menu-card:active { transform: scale(0.97); }
+        .menu-card .icon { font-size: 1.5rem; }
+        .menu-card .title { font-size: 0.88rem; }
+        .menu-card .subtitle { font-size: 0.73rem; font-weight: 400; opacity: 0.75; }
+        .dokter { background: var(--secondary); color: #3A7D94; }
+        .koki { background: var(--accent); color: #4A7C49; }
+        .imunisasi { background: var(--teal); color: #3A7C75; }
+        .tumbuh { background: var(--yellow); color: #7A7B00; }
+        .bermain { background: var(--purple); color: #5A4B7C; }
+        .tenang { background: var(--peach); color: #7C5A4B; }
+        .jadwal-mpasi { background: #FFE4E1; color: #C0504D; }
+        .jadwal-imun { background: #E8F5E9; color: #2E7D32; }
+
+        /* PANTAU BANNER */
+        .pantau-banner {
+            background: linear-gradient(135deg, #FF8B94, #FFB7B2);
+            border-radius: 18px; padding: 16px; margin-bottom: 16px;
+            color: white; display: none; cursor: pointer;
+        }
+        .pantau-banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+        .pantau-banner-sub { font-size: 0.8rem; opacity: 0.9; margin-bottom: 10px; }
+        .pantau-banner-btn { background: white; color: var(--highlight); border: none; border-radius: 10px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; font-family: inherit; }
+
+        /* INPUT SECTION */
+        .input-section { background: white; border-radius: 22px; box-shadow: 0 4px 20px rgba(255,139,148,0.1); display: none; flex-direction: column; height: calc(100vh - 80px); }
+        .section-header { padding: 14px 18px; background: white; border-bottom: 0.5px solid #f5e8e8; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .back-btn { background: #f5f5f5; border: none; color: #777; cursor: pointer; font-weight: 700; padding: 6px 12px; border-radius: 10px; font-size: 0.8rem; font-family: inherit; }
+        .section-title { color: var(--highlight); font-size: 1rem; font-weight: 700; }
+
+        .form-area { padding: 14px 18px; flex-shrink: 0; background: white; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.86rem; }
+        input[type="text"], input[type="date"], select, textarea { width: 100%; border: 2px solid #F0F0F0; border-radius: 12px; padding: 10px 13px; font-family: inherit; outline: none; margin-bottom: 10px; font-size: 0.88rem; transition: border-color 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { height: 80px; resize: none; }
+        .submit-btn { width: 100%; padding: 13px; background: var(--highlight); color: white; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .submit-btn:disabled { opacity: 0.5; }
+
+        /* CHAT */
+        .chat-area { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #FDFBFF; }
+        .bubble-ai { background: white; border: 1.5px solid #FFE4E6; border-radius: 4px 16px 16px 16px; padding: 12px 14px; font-size: 0.87rem; color: #444; line-height: 1.65; max-width: 95%; }
+        .bubble-ai .blabel { font-size: 0.7rem; color: var(--highlight); font-weight: 700; margin-bottom: 6px; display: block; }
+        .bubble-ai strong { color: var(--highlight); }
+        .bubble-ai h1,.bubble-ai h2,.bubble-ai h3 { color: var(--highlight); font-size: 0.9rem; margin: 8px 0 4px; }
+        .bubble-ai ul,.bubble-ai ol { padding-left: 16px; margin: 6px 0; }
+        .bubble-ai li { margin-bottom: 3px; }
+
+        .bubble-user { background: var(--highlight); color: white; border-radius: 16px 4px 16px 16px; padding: 10px 14px; font-size: 0.87rem; align-self: flex-end; max-width: 80%; }
+
+        /* CARD-CARD PANTAU */
+        .card-analisis { background: #FFF5F5; border: 1.5px solid #FFD0D3; border-radius: 4px 16px 16px 16px; padding: 12px 14px; max-width: 95%; }
+        .card-analisis .blabel { font-size: 0.7rem; color: var(--highlight); font-weight: 700; margin-bottom: 6px; display: block; }
+        .card-analisis .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; margin-bottom: 8px; }
+        .badge-membaik { background: #E8F5E9; color: #2E7D32; }
+        .badge-tetap { background: #FFF8E1; color: #F57F17; }
+        .badge-memburuk { background: #FFEBEE; color: #C62828; }
+        .card-analisis .teks { font-size: 0.85rem; color: #444; line-height: 1.6; }
+
+        .card-noobat { background: #E8F5E9; border: 1.5px solid #A5D6A7; border-radius: 4px 16px 16px 16px; padding: 12px 14px; max-width: 95%; }
+        .card-noobat .blabel { font-size: 0.7rem; color: #2E7D32; font-weight: 700; margin-bottom: 8px; display: block; }
+        .noobat-item { margin-bottom: 8px; }
+        .noobat-tips { font-size: 0.84rem; color: #1B5E20; line-height: 1.5; }
+        .noobat-sumber { font-size: 0.7rem; color: #4CAF50; margin-top: 2px; }
+
+        .card-herbal { background: #F1F8E9; border: 1.5px solid #C5E1A5; border-radius: 4px 16px 16px 16px; padding: 12px 14px; max-width: 95%; }
+        .card-herbal .blabel { font-size: 0.7rem; color: #558B2F; font-weight: 700; margin-bottom: 8px; display: block; }
+        .herbal-item { margin-bottom: 8px; }
+        .herbal-cara { font-size: 0.84rem; color: #33691E; line-height: 1.5; }
+        .herbal-sumber { font-size: 0.7rem; color: #7CB342; margin-top: 2px; }
+
+        .card-obat { background: #E3F2FD; border: 1.5px solid #90CAF9; border-radius: 4px 16px 16px 16px; padding: 12px 14px; max-width: 95%; }
+        .card-obat .blabel { font-size: 0.7rem; color: #1565C0; font-weight: 700; margin-bottom: 6px; display: block; }
+        .card-obat .obat-teks { font-size: 0.84rem; color: #0D47A1; line-height: 1.5; }
+        .card-obat .obat-disclaimer { font-size: 0.72rem; color: #42A5F5; margin-top: 6px; background: white; padding: 5px 8px; border-radius: 8px; }
+
+        .card-bahaya { background: #FFF3E0; border: 1.5px solid #FFCC80; border-radius: 4px 16px 16px 16px; padding: 12px 14px; max-width: 95%; }
+        .card-bahaya .blabel { font-size: 0.7rem; color: #E65100; font-weight: 700; margin-bottom: 8px; display: block; }
+        .bahaya-item { font-size: 0.82rem; color: #BF360C; margin-bottom: 4px; }
+
+        .card-rs { background: #FFEBEE; border: 2px solid #EF9A9A; border-radius: 16px; padding: 16px; max-width: 95%; }
+        .card-rs .blabel { font-size: 0.7rem; color: #C62828; font-weight: 700; margin-bottom: 8px; display: block; }
+        .card-rs .rs-pesan { font-size: 0.88rem; color: #B71C1C; font-weight: 600; line-height: 1.6; margin-bottom: 10px; }
+        .rs-btn { width: 100%; padding: 11px; background: #E53935; color: white; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+        .card-sembuh { background: #E8F5E9; border: 2px solid #A5D6A7; border-radius: 16px; padding: 16px; max-width: 95%; text-align: center; }
+        .card-sembuh .sembuh-emoji { font-size: 2rem; margin-bottom: 8px; }
+        .card-sembuh .sembuh-teks { font-size: 0.88rem; color: #1B5E20; font-weight: 600; line-height: 1.6; }
+
+        .typing-bubble { background: white; border: 1.5px solid #FFE4E6; border-radius: 4px 16px 16px 16px; padding: 12px 16px; max-width: 80px; }
+        .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--highlight); margin: 0 2px; animation: bounce 1s infinite ease-in-out; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+        /* BOTTOM */
+        .bottom-area { background: white; border-top: 0.5px solid #f5e8e8; padding: 10px 14px; flex-shrink: 0; }
+        .followup-label { font-size: 0.75rem; color: #bbb; margin-bottom: 7px; font-weight: 600; }
+        .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+        .qbtn { font-size: 0.75rem; padding: 6px 11px; border-radius: 20px; border: 1.5px solid var(--primary); background: white; color: var(--highlight); cursor: pointer; font-weight: 600; font-family: inherit; }
+        .qbtn:active { background: var(--highlight); color: white; }
+
+        .update-btn { width: 100%; padding: 12px; background: var(--highlight); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 8px; }
+
+        .input-row { display: flex; gap: 7px; }
+        .followup-input { flex: 1; border: 1.5px solid #f0e8e8; border-radius: 12px; padding: 9px 12px; font-size: 0.86rem; outline: none; background: #fafafa; color: #444; font-family: inherit; }
+        .followup-input:focus { border-color: var(--primary); }
+        .send-btn { background: var(--highlight); color: white; border: none; border-radius: 12px; padding: 9px 14px; font-size: 0.86rem; cursor: pointer; font-weight: 700; font-family: inherit; }
+        .share-btn { width: 100%; margin-top: 8px; padding: 10px; background: #25D366; color: white; border: none; border-radius: 12px; font-size: 0.86rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .disclaimer { font-size: 0.7rem; color: #CCC; text-align: center; margin-top: 7px; }
+
+        .riwayat-section { margin-top: 20px; display: none; }
+        .riwayat-title { font-weight: 700; font-size: 0.86rem; color: #aaa; margin-bottom: 8px; }
+        .riwayat-item { background: white; border-radius: 12px; padding: 10px 13px; margin-bottom: 7px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-size: 0.82rem; }
+        .ri-mode { color: var(--highlight); font-weight: 700; font-size: 0.72rem; }
+        .ri-query { color: #555; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ri-time { color: #bbb; font-size: 0.68rem; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <div class="login-box">
+        <div class="login-logo">🌸</div>
+        <h1>BundaCare</h1>
+        <p>Hadir untuk Bunda, tumbuh bersama si kecil</p>
+        <input type="email" class="login-input" id="loginEmail" placeholder="Email kamu">
+        <button class="login-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
+        <p class="login-error" id="loginError"></p>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="appPage">
+    <div class="top-bar">
+        <div>
+            <div class="top-bar-brand">🌸 BundaCare</div>
+            <div class="top-bar-greeting" id="greetingText"></div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">Keluar</button>
+    </div>
+
+    <div class="container">
+        <div id="mainMenu">
+            <header>
+                <h1>Halo, Bunda! 👋</h1>
+                <p>Ada yang bisa BundaCare bantu hari ini?</p>
+            </header>
+
+            <!-- Banner Pemantauan Aktif -->
+            <div class="pantau-banner" id="pantauBanner" onclick="lanjutPantau()">
+                <div class="pantau-banner-title">🌡️ Pemantauan Sedang Aktif</div>
+                <div class="pantau-banner-sub" id="pantauBannerSub">Si kecil sedang dipantau BundaCare</div>
+                <button class="pantau-banner-btn">Update Kondisi Sekarang →</button>
+            </div>
+
+            <div class="menu-grid">
+                <button class="menu-card dokter" onclick="openFeature('Dokter')">
+                    <span class="icon">💊</span><span class="title">Dokter Tenang</span>
+                    <span class="subtitle">Cek gejala & pertolongan pertama</span>
+                </button>
+                <button class="menu-card koki" onclick="openFeature('MPASI')">
+                    <span class="icon">🍳</span><span class="title">Koki MPASI</span>
+                    <span class="subtitle">Resep sehat & takaran pas</span>
+                </button>
+                <button class="menu-card imunisasi" onclick="openFeature('Imunisasi')">
+                    <span class="icon">🗓️</span><span class="title">Jadwal Imunisasi</span>
+                    <span class="subtitle">Vaksin & vitamin wajib</span>
+                </button>
+                <button class="menu-card tumbuh" onclick="openFeature('Tumbuh')">
+                    <span class="icon">📏</span><span class="title">Pantau Kembang</span>
+                    <span class="subtitle">Milestone & stimulasi</span>
+                </button>
+                <button class="menu-card bermain" onclick="openFeature('Bermain')">
+                    <span class="icon">🎨</span><span class="title">Ide Bermain</span>
+                    <span class="subtitle">Sensory, Gerak & Perasaan</span>
+                </button>
+                <button class="menu-card tenang" onclick="openFeature('Tenang')">
+                    <span class="icon">🧘</span><span class="title">Pojok Tenang</span>
+                    <span class="subtitle">Curhat & semangat Bunda</span>
+                </button>
+                <button class="menu-card jadwal-mpasi menu-grid-full" onclick="openFeature('MPASI_Jadwal')">
+                    <span class="icon">📅</span><span class="title">Jadwal MPASI Otomatis</span>
+                    <span class="subtitle">Input usia → jadwal makan lengkap</span>
+                </button>
+                <button class="menu-card jadwal-imun menu-grid-full" onclick="openFeature('Imunisasi_Jadwal')">
+                    <span class="icon">💉</span><span class="title">Jadwal Imunisasi Lengkap</span>
+                    <span class="subtitle">Input tanggal lahir → jadwal vaksin</span>
+                </button>
+            </div>
+            <div class="riwayat-section" id="riwayatSection">
+                <div class="riwayat-title">📋 Pertanyaan Terakhir</div>
+                <div id="riwayatList"></div>
+            </div>
+        </div>
+
+        <!-- INPUT + CHAT -->
+        <div class="input-section" id="inputSection" style="display:none; flex-direction:column; height:calc(100vh - 80px);">
+            <div class="section-header">
+                <button class="back-btn" onclick="goBack()">← Menu</button>
+                <span class="section-title" id="featureTitle"></span>
+            </div>
+            <div class="form-area" id="formArea">
+                <div id="ageField" style="display:none"><label>Usia si Kecil:</label><input type="text" id="childAge" placeholder="Contoh: 8 bulan"></div>
+                <div id="birthDateField" style="display:none"><label>Tanggal Lahir si Kecil:</label><input type="date" id="birthDate"></div>
+                <div id="playTypeField" style="display:none">
+                    <label>Jenis Permainan:</label>
+                    <select id="playType">
+                        <option value="Sensory">Sensory — indra & koordinasi</option>
+                        <option value="Gerak">Gerak — motorik & keseimbangan</option>
+                        <option value="Perasaan">Perasaan — sosial & emosi</option>
+                        <option value="Kreativitas">Kreativitas — imajinasi</option>
+                    </select>
+                </div>
+                <div id="queryField" style="display:none"><label id="queryLabel">Pertanyaan Bunda:</label><textarea id="userInput"></textarea></div>
+                <button class="submit-btn" id="submitBtn" onclick="firstSubmit()">TANYA BUNDACARE</button>
+            </div>
+            <div class="chat-area" id="chatArea" style="display:none"></div>
+            <div class="bottom-area" id="bottomArea" style="display:none">
+                <div id="modeUpdateKondisi" style="display:none">
+                    <button class="update-btn" onclick="showUpdateInput()">🌡️ Update Kondisi Si Kecil</button>
+                    <div id="updateInputArea" style="display:none">
+                        <textarea id="updateInput" style="height:70px;margin-bottom:8px" placeholder="Ceritakan kondisi si kecil sekarang, Bunda... Demamnya turun? Masih rewel?"></textarea>
+                        <button class="submit-btn" onclick="sendUpdate()">Kirim Update</button>
+                    </div>
+                </div>
+                <div id="modeFollowup">
+                    <div class="followup-label" id="followupLabel"></div>
+                    <div class="quick-btns" id="quickBtns"></div>
+                    <div class="input-row">
+                        <input type="text" class="followup-input" id="followupInput" placeholder="Ketik pertanyaan lanjutan...">
+                        <button class="send-btn" onclick="sendFollowup()">Kirim</button>
+                    </div>
+                </div>
+                <button class="share-btn" onclick="shareWhatsApp()">📤 Bagikan ke WhatsApp</button>
+                <p class="disclaimer">⚠️ Hanya untuk edukasi. Jika mendesak, segera ke dokter.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMode = "";
+let userEmail = "";
+let chatHistory = [];
+let lastAnswer = "";
+let currentAge = "";
+let riwayat = JSON.parse(localStorage.getItem('bc_riwayat') || '[]');
+let sesiPantau = JSON.parse(localStorage.getItem('bc_pantau') || 'null');
+const PANTAU_EXPIRED = 3 * 24 * 60 * 60 * 1000;
+
+const quickReplies = {
+    Dokter: ['💊 Obat yang aman', '🏥 Kapan ke dokter?', '🌿 Herbal lainnya', '🍼 Aman untuk usianya?'],
+    MPASI: ['🥄 Resep lain', '⚖️ Takaran tepat', '🤔 Bayi tidak mau makan?'],
+    Imunisasi: ['📅 Jadwal selanjutnya', '💉 Efek samping?', '🏥 Vaksin di mana?'],
+    Tumbuh: ['🎯 Stimulasi lanjutan', '⚠️ Kapan ke dokter?', '📊 Normal/tidak?'],
+    Bermain: ['🎮 Ide lain', '🛒 Bahan alternatif?', '⏱️ Berapa lama?'],
+    Tenang: ['💪 Tips lebih lanjut', '🤗 Masih khawatir', '💬 Cerita lagi'],
+    MPASI_Jadwal: ['🥣 Resep menu ini', '📅 Jadwal minggu depan'],
+    Imunisasi_Jadwal: ['💉 Info vaksin ini', '🏥 Klinik terdekat'],
+};
+
+const featureConfig = {
+    Dokter: { title:'💊 Dokter Tenang', fields:['ageField','queryField'], label:'Gejala si kecil:', ph:'Contoh: demam sejak kemarin, badan anget...', hasPantau: true },
+    MPASI: { title:'🍳 Koki MPASI', fields:['ageField','queryField'], label:'Bahan di dapur:', ph:'Contoh: ayam, wortel, brokoli...' },
+    Imunisasi: { title:'🗓️ Jadwal Imunisasi', fields:['ageField','queryField'], label:'Pertanyaan imunisasi:', ph:'Contoh: vaksin apa yang perlu di usia ini?' },
+    Tumbuh: { title:'📏 Pantau Kembang', fields:['ageField','queryField'], label:'Si kecil sudah bisa apa?', ph:'Contoh: sudah bisa duduk tapi belum merangkak...' },
+    Bermain: { title:'🎨 Ide Bermain', fields:['ageField','playTypeField','queryField'], label:'Bahan tersedia (opsional):', ph:'Contoh: kardus, beras, botol bekas...' },
+    Tenang: { title:'🧘 Pojok Tenang', fields:['queryField'], label:'Ceritakan perasaan Bunda:', ph:'Bunda boleh curhat apa saja...' },
+    MPASI_Jadwal: { title:'📅 Jadwal MPASI Otomatis', fields:['ageField'] },
+    Imunisasi_Jadwal: { title:'💉 Jadwal Imunisasi Lengkap', fields:['birthDateField'] },
+};
+
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 11) return 'Selamat pagi'; if (h < 15) return 'Selamat siang';
+    if (h < 18) return 'Selamat sore'; return 'Selamat malam';
+}
+
+async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const btn = document.getElementById('loginBtn');
+    if (!email) { showLoginErr('Masukkan email kamu dulu ya, Bunda.'); return; }
+    btn.disabled = true; btn.textContent = 'Memeriksa...';
+    document.getElementById('loginError').style.display = 'none';
+    try {
+        const res = await fetch('/api/cek-akses', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email}) });
+        const data = await res.json();
+        if (data.allowed) { userEmail = email; localStorage.setItem('bc_email', email); showApp(); }
+        else showLoginErr(data.message || 'Email tidak memiliki akses.');
+    } catch(e) { showLoginErr('Gagal terhubung ke server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Masuk'; }
+}
+
+function showLoginErr(msg) { const e = document.getElementById('loginError'); e.textContent = msg; e.style.display = 'block'; }
+
+function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appPage').style.display = 'block';
+    document.getElementById('greetingText').textContent = `${getGreeting()}, ${userEmail.split('@')[0]}!`;
+    checkPantauBanner();
+    renderRiwayat();
+}
+
+function doLogout() {
+    localStorage.removeItem('bc_email'); userEmail = '';
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('appPage').style.display = 'none';
+    document.getElementById('loginEmail').value = '';
+}
+
+window.addEventListener('load', () => {
+    const saved = localStorage.getItem('bc_email');
+    if (saved) { userEmail = saved; showApp(); }
+});
+
+function checkPantauBanner() {
+    sesiPantau = JSON.parse(localStorage.getItem('bc_pantau') || 'null');
+    const banner = document.getElementById('pantauBanner');
+    if (sesiPantau && !sesiPantau.selesai) {
+        const age = Date.now() - sesiPantau.mulai;
+        if (age > PANTAU_EXPIRED) { localStorage.removeItem('bc_pantau'); sesiPantau = null; banner.style.display = 'none'; return; }
+        banner.style.display = 'block';
+        document.getElementById('pantauBannerSub').textContent = `Memantau: ${sesiPantau.gejalaAwal.substring(0,50)}...`;
+    } else { banner.style.display = 'none'; }
+}
+
+function lanjutPantau() {
+    if (!sesiPantau) return;
+    currentMode = 'Dokter'; currentAge = sesiPantau.age;
+    document.getElementById('mainMenu').style.display = 'none';
+    const sec = document.getElementById('inputSection');
+    sec.style.display = 'flex';
+    document.getElementById('featureTitle').textContent = '💊 Dokter Tenang — Mode Pemantauan';
+    document.getElementById('formArea').style.display = 'none';
+    const chatArea = document.getElementById('chatArea');
+    chatArea.style.display = 'flex';
+    chatArea.innerHTML = '';
+    sesiPantau.riwayatChat.forEach(b => {
+        const el = document.createElement('div');
+        el.className = b.role === 'user' ? 'bubble-user' : 'bubble-ai';
+        if (b.role !== 'user') el.innerHTML = `<span class="blabel">🌸 BundaCare</span>${marked.parse(b.text)}`;
+        else el.textContent = b.text;
+        chatArea.appendChild(el);
+    });
+    chatArea.scrollTop = chatArea.scrollHeight;
+    document.getElementById('bottomArea').style.display = 'block';
+    document.getElementById('modeUpdateKondisi').style.display = 'block';
+    document.getElementById('modeFollowup').style.display = 'none';
+}
+
+function openFeature(mode) {
+    currentMode = mode; chatHistory = []; lastAnswer = '';
+    const cfg = featureConfig[mode];
+    document.getElementById('mainMenu').style.display = 'none';
+    const sec = document.getElementById('inputSection');
+    sec.style.display = 'flex';
+    document.getElementById('featureTitle').textContent = cfg.title;
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('chatArea').style.display = 'none';
+    document.getElementById('bottomArea').style.display = 'none';
+    document.getElementById('chatArea').innerHTML = '';
+    document.getElementById('userInput').value = '';
+    document.getElementById('childAge').value = '';
+    document.getElementById('birthDate').value = '';
+    ['ageField','birthDateField','playTypeField','queryField'].forEach(f => document.getElementById(f).style.display = 'none');
+    cfg.fields.forEach(f => document.getElementById(f).style.display = 'block');
+    if (cfg.label) { document.getElementById('queryLabel').textContent = cfg.label; document.getElementById('userInput').placeholder = cfg.ph; }
+}
+
+function goBack() {
+    document.getElementById('mainMenu').style.display = 'block';
+    document.getElementById('inputSection').style.display = 'none';
+    checkPantauBanner();
+}
+
+async function firstSubmit() {
+    const query = document.getElementById('userInput').value.trim();
+    const age = document.getElementById('childAge').value.trim();
+    const birthDate = document.getElementById('birthDate').value;
+    const playType = document.getElementById('playType').value;
+    const cfg = featureConfig[currentMode];
+    if (currentMode === 'Imunisasi_Jadwal' && !birthDate) { alert('Masukkan tanggal lahir.'); return; }
+    if (cfg.fields.includes('ageField') && !age) { alert('Masukkan usia si kecil.'); return; }
+    if (cfg.fields.includes('queryField') && !query && currentMode !== 'Tenang') { alert('Isi pertanyaannya dulu ya, Bunda.'); return; }
+    currentAge = age;
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('chatArea').style.display = 'flex';
+
+    if (currentMode === 'Dokter') {
+        await mulaiPantau(age, query);
+    } else {
+        const payload = { mode: currentMode, query: currentMode === 'Imunisasi_Jadwal' ? birthDate : query, age, playType };
+        await callAI(payload, query || age);
+    }
+}
+
+async function mulaiPantau(age, gejala) {
+    const chatArea = document.getElementById('chatArea');
+    const typing = createTyping(); chatArea.appendChild(typing); chatArea.scrollTop = chatArea.scrollHeight;
+
+    try {
+        const res = await fetch('/api/pantau', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'mulai', age, gejalaAwal: gejala }) });
+        const data = await res.json();
+        typing.remove();
+
+        if (data.error) { addBubbleAI(chatArea, data.error); return; }
+
+        lastAnswer = data.analisis;
+
+        addBubbleAI(chatArea, data.analisis);
+        if (data.nonObat?.length) addCardNoObat(chatArea, data.nonObat);
+        if (data.herbal?.length) addCardHerbal(chatArea, data.herbal);
+        if (data.obatUmum) addCardObat(chatArea, data.obatUmum);
+        if (data.tandaBahaya?.length) addCardBahaya(chatArea, data.tandaBahaya);
+
+        const tanyaPantau = document.createElement('div');
+        tanyaPantau.className = 'bubble-ai';
+        tanyaPantau.innerHTML = `<span class="blabel">🌸 BundaCare</span>${data.pesanPemantauan}<br><br><button onclick="mulaiSesiPantau('${age}','${gejala.replace(/'/g,"\\'")}',this)" style="background:var(--highlight);color:white;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;margin-top:4px">Ya, pantau si kecil bersama BundaCare 🌸</button>`;
+        chatArea.appendChild(tanyaPantau);
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        document.getElementById('bottomArea').style.display = 'block';
+        document.getElementById('modeUpdateKondisi').style.display = 'none';
+        document.getElementById('modeFollowup').style.display = 'block';
+        renderQuickBtns();
+
+    } catch(err) { typing.remove(); addBubbleAI(chatArea, 'Gagal: ' + err.message); }
+}
+
+function mulaiSesiPantau(age, gejala, btn) {
+    btn.textContent = '✅ Pemantauan dimulai!'; btn.disabled = true;
+    sesiPantau = { mulai: Date.now(), age, gejalaAwal: gejala, riwayatUpdate: [], riwayatChat: [], selesai: false };
+    localStorage.setItem('bc_pantau', JSON.stringify(sesiPantau));
+    document.getElementById('modeUpdateKondisi').style.display = 'block';
+    document.getElementById('modeFollowup').style.display = 'none';
+}
+
+function showUpdateInput() {
+    const area = document.getElementById('updateInputArea');
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+}
+
+async function sendUpdate() {
+    const text = document.getElementById('updateInput').value.trim();
+    if (!text) { alert('Ceritakan kondisi si kecil dulu ya Bunda.'); return; }
+    document.getElementById('updateInput').value = '';
+    document.getElementById('updateInputArea').style.display = 'none';
+
+    sesiPantau = JSON.parse(localStorage.getItem('bc_pantau') || 'null');
+    if (!sesiPantau) return;
+
+    const chatArea = document.getElementById('chatArea');
+    const ub = document.createElement('div'); ub.className = 'bubble-user'; ub.textContent = text; chatArea.appendChild(ub);
+    const typing = createTyping(); chatArea.appendChild(typing); chatArea.scrollTop = chatArea.scrollHeight;
+
+    const waktu = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    sesiPantau.riwayatUpdate.push({ kondisi: text, waktu });
+    sesiPantau.riwayatChat.push({ role:'user', text });
+
+    try {
+        const res = await fetch('/api/pantau', { method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ type:'update', age: sesiPantau.age, gejalaAwal: sesiPantau.gejalaAwal, updateText: text, riwayatUpdate: sesiPantau.riwayatUpdate }) });
+        const data = await res.json();
+        typing.remove();
+
+        if (data.error) { addBubbleAI(chatArea, data.error); return; }
+
+        addCardAnalisis(chatArea, data);
+        if (data.nonObat?.length) addCardNoObat(chatArea, data.nonObat);
+        if (data.herbal?.length) addCardHerbal(chatArea, data.herbal);
+        if (data.obatUmum) addCardObat(chatArea, data.obatUmum);
+        if (data.tandaBahaya?.length) addCardBahaya(chatArea, data.tandaBahaya);
+
+        const aiText = data.pesanLanjut || data.analisis;
+        sesiPantau.riwayatChat.push({ role:'model', text: aiText });
+        lastAnswer = aiText;
+
+        if (data.harusKeRS) {
+            addCardRS(chatArea, data.pesanRS);
+            sesiPantau.selesai = true;
+            document.getElementById('modeUpdateKondisi').style.display = 'none';
+        } else if (data.sembuh) {
+            addCardSembuh(chatArea, data.pesanSembuh);
+            sesiPantau.selesai = true;
+            document.getElementById('modeUpdateKondisi').style.display = 'none';
+        }
+
+        localStorage.setItem('bc_pantau', JSON.stringify(sesiPantau));
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+    } catch(err) { typing.remove(); addBubbleAI(chatArea, 'Gagal: ' + err.message); }
+}
+
+function addBubbleAI(chatArea, text) {
+    const el = document.createElement('div'); el.className = 'bubble-ai';
+    el.innerHTML = `<span class="blabel">🌸 BundaCare</span>${marked.parse(text)}`;
+    chatArea.appendChild(el); chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function addCardAnalisis(chatArea, data) {
+    const statusMap = { membaik: {cls:'badge-membaik', label:'✅ Membaik'}, tetap: {cls:'badge-tetap', label:'⏳ Masih sama'}, memburuk: {cls:'badge-memburuk', label:'⚠️ Memburuk'} };
+    const s = statusMap[data.status] || statusMap['tetap'];
+    const el = document.createElement('div'); el.className = 'card-analisis';
+    el.innerHTML = `<span class="blabel">📊 Analisis Kondisi</span><span class="status-badge ${s.cls}">${s.label}</span><div class="teks">${data.analisis}</div>`;
+    chatArea.appendChild(el);
+}
+
+function addCardNoObat(chatArea, items) {
+    const el = document.createElement('div'); el.className = 'card-noobat';
+    el.innerHTML = `<span class="blabel">🤲 Saran Non-Obat</span>` + items.map(i => `<div class="noobat-item"><div class="noobat-tips">• ${i.tips}</div><div class="noobat-sumber">📚 ${i.sumber}</div></div>`).join('');
+    chatArea.appendChild(el);
+}
+
+function addCardHerbal(chatArea, items) {
+    const el = document.createElement('div'); el.className = 'card-herbal';
+    el.innerHTML = `<span class="blabel">🌿 Herbal Tradisional</span>` + items.map(i => `<div class="herbal-item"><div class="herbal-cara">• ${i.cara}</div><div class="herbal-sumber">📚 ${i.sumber}</div></div>`).join('');
+    chatArea.appendChild(el);
+}
+
+function addCardObat(chatArea, text) {
+    const el = document.createElement('div'); el.className = 'card-obat';
+    el.innerHTML = `<span class="blabel">💊 Info Obat Umum</span><div class="obat-teks">${text}</div><div class="obat-disclaimer">⚠️ Dosis, jenis & merek obat harus dikonsultasikan dengan dokter atau apoteker ya Bunda.</div>`;
+    chatArea.appendChild(el);
+}
+
+function addCardBahaya(chatArea, items) {
+    const el = document.createElement('div'); el.className = 'card-bahaya';
+    el.innerHTML = `<span class="blabel">🚨 Segera ke Dokter Jika</span>` + items.map(i => `<div class="bahaya-item">• ${i}</div>`).join('');
+    chatArea.appendChild(el);
+}
+
+function addCardRS(chatArea, pesan) {
+    const el = document.createElement('div'); el.className = 'card-rs';
+    el.innerHTML = `<span class="blabel">🏥 Perlu Segera ke Dokter</span><div class="rs-pesan">${pesan}</div><button class="rs-btn" onclick="window.open('https://wa.me/?text=Butuh+bantuan+dokter+segera','_blank')">Hubungi Dokter Sekarang</button>`;
+    chatArea.appendChild(el);
+}
+
+function addCardSembuh(chatArea, pesan) {
+    const el = document.createElement('div'); el.className = 'card-sembuh';
+    el.innerHTML = `<div class="sembuh-emoji">🎉</div><div class="sembuh-teks">${pesan}</div>`;
+    chatArea.appendChild(el);
+    localStorage.removeItem('bc_pantau');
+}
+
+function createTyping() {
+    const el = document.createElement('div'); el.className = 'typing-bubble';
+    el.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    return el;
+}
+
+async function callAI(payload, userText) {
+    const chatArea = document.getElementById('chatArea');
+    if (userText) { const ub = document.createElement('div'); ub.className = 'bubble-user'; ub.textContent = userText; chatArea.appendChild(ub); }
+    const typing = createTyping(); chatArea.appendChild(typing); chatArea.scrollTop = chatArea.scrollHeight;
+    try {
+        const res = await fetch('/api/tanya', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...payload, history: chatHistory}) });
+        const data = await res.json();
+        typing.remove();
+        const aiText = data.text || "Maaf, tidak ada respons.";
+        lastAnswer = aiText;
+        chatHistory.push({ role:'user', text: payload.query || userText });
+        chatHistory.push({ role:'model', text: aiText });
+        addBubbleAI(chatArea, aiText);
+        if (data.herbal) addCardHerbal(chatArea, [{ cara: data.herbal, sumber: 'Kemenkes RI, IDAI' }]);
+        document.getElementById('bottomArea').style.display = 'block';
+        document.getElementById('modeUpdateKondisi').style.display = 'none';
+        document.getElementById('modeFollowup').style.display = 'block';
+        renderQuickBtns();
+        saveRiwayat(featureConfig[currentMode].title, userText, aiText);
+    } catch(err) { typing.remove(); addBubbleAI(chatArea, 'Gagal: ' + err.message); }
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function renderQuickBtns() {
+    const btns = quickReplies[currentMode] || [];
+    document.getElementById('followupLabel').textContent = btns.length ? 'Masih ada yang ingin ditanyakan?' : '';
+    document.getElementById('quickBtns').innerHTML = btns.map(b => `<button class="qbtn" onclick="sendQuick('${b}')">${b}</button>`).join('');
+}
+
+function sendQuick(text) {
+    document.getElementById('followupInput').value = '';
+    callAI({ mode:currentMode, query:text, age:document.getElementById('childAge').value, playType:document.getElementById('playType').value }, text);
+}
+
+function sendFollowup() {
+    const input = document.getElementById('followupInput');
+    const text = input.value.trim(); if (!text) return;
+    input.value = '';
+    callAI({ mode:currentMode, query:text, age:document.getElementById('childAge').value, playType:document.getElementById('playType').value }, text);
+}
+
+function shareWhatsApp() {
+    const cfg = featureConfig[currentMode];
+    const text = `🌸 *BundaCare*\n_${cfg?.title}_\n\n${lastAnswer}\n\n_Dijawab oleh BundaCare_\n_bundacare.fun_`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function saveRiwayat(mode, query, answer) {
+    const item = { mode, query:(query||'').substring(0,60), answer, time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) };
+    riwayat.unshift(item); if (riwayat.length > 5) riwayat = riwayat.slice(0,5);
+    localStorage.setItem('bc_riwayat', JSON.stringify(riwayat)); renderRiwayat();
+}
+
+function renderRiwayat() {
+    const sec = document.getElementById('riwayatSection');
+    const list = document.getElementById('riwayatList');
+    if (!riwayat.length) { sec.style.display='none'; return; }
+    sec.style.display = 'block';
+    list.innerHTML = riwayat.map((item,i) => `<div class="riwayat-item" onclick="showRiwayat(${i})"><div class="ri-mode">${item.mode}</div><div class="ri-query">${item.query}</div><div class="ri-time">${item.time}</div></div>`).join('');
+}
+
+function showRiwayat(i) {
+    const item = riwayat[i];
+    currentMode = Object.keys(featureConfig).find(k => featureConfig[k].title === item.mode) || 'Dokter';
+    chatHistory = []; lastAnswer = item.answer;
+    document.getElementById('mainMenu').style.display = 'none';
+    document.getElementById('inputSection').style.display = 'flex';
+    document.getElementById('featureTitle').textContent = item.mode;
+    document.getElementById('formArea').style.display = 'none';
+    const chatArea = document.getElementById('chatArea');
+    chatArea.style.display = 'flex'; chatArea.innerHTML = '';
+    addBubbleAI(chatArea, item.answer);
+    document.getElementById('bottomArea').style.display = 'block';
+    document.getElementById('modeUpdateKondisi').style.display = 'none';
+    document.getElementById('modeFollowup').style.display = 'block';
+    renderQuickBtns();
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement.id === 'loginEmail') doLogin();
+    if (e.key === 'Enter' && document.activeElement.id === 'followupInput') sendFollowup();
+});
+</script>
+</body>
+</html>
