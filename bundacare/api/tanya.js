@@ -71,12 +71,24 @@ Format tabel: Usia | Vaksin | Keterangan. Tambah catatan penting di akhir.`;
   let contents = [];
 
   if (history && history.length > 0) {
-    for (const msg of history) {
+    // Selalu include systemPrompt di pesan pertama history
+    const firstUserMsg = history[0];
+    contents.push({
+      role: 'user',
+      parts: [{ text: `${systemPrompt}\n\n${firstUserMsg.text}` }]
+    });
+    // Lanjutkan sisa history
+    for (let i = 1; i < history.length; i++) {
       contents.push({
-        role: msg.role,
-        parts: [{ text: msg.text }]
+        role: history[i].role,
+        parts: [{ text: history[i].text }]
       });
     }
+    // Tambahkan pertanyaan terbaru
+    contents.push({
+      role: 'user',
+      parts: [{ text: query }]
+    });
   } else {
     contents.push({
       role: 'user',
@@ -84,7 +96,7 @@ Format tabel: Usia | Vaksin | Keterangan. Tambah catatan penting di akhir.`;
     });
   }
 
-  // Herbal prompt khusus Dokter
+  // Herbal prompt khusus Dokter (hanya pertanyaan pertama)
   let herbalText = null;
   if (mode === 'Dokter' && (!history || history.length === 0)) {
     try {
