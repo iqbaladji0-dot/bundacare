@@ -97,11 +97,6 @@
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
 
         .bottom-area { background: white; border-top: 0.5px solid #f5e8e8; padding: 10px 14px; flex-shrink: 0; }
-        .followup-label { font-size: 0.82rem; color: #bbb; margin-bottom: 7px; font-weight: 600; }
-        .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-        .qbtn { font-size: 0.82rem; padding: 6px 11px; border-radius: 20px; border: 1.5px solid var(--primary); background: white; color: var(--highlight); cursor: pointer; font-weight: 600; font-family: inherit; }
-        .qbtn:active { background: var(--highlight); color: white; }
-
         .input-row { display: flex; gap: 7px; }
         .followup-input { flex: 1; border: 1.5px solid #f0e8e8; border-radius: 12px; padding: 9px 12px; font-size: 0.95rem; outline: none; background: #fafafa; color: #444; font-family: inherit; }
         .followup-input:focus { border-color: var(--primary); }
@@ -211,13 +206,9 @@
             </div>
             <div class="chat-area" id="chatArea" style="display:none"></div>
             <div class="bottom-area" id="bottomArea" style="display:none">
-                <div id="modeFollowup">
-                    <div class="followup-label" id="followupLabel"></div>
-                    <div class="quick-btns" id="quickBtns"></div>
-                    <div class="input-row">
-                        <input type="text" class="followup-input" id="followupInput" placeholder="Ketik pertanyaan lanjutan...">
-                        <button class="send-btn" onclick="sendFollowup()">Kirim</button>
-                    </div>
+                <div class="input-row">
+                    <input type="text" class="followup-input" id="followupInput" placeholder="Ketik pertanyaan lanjutan...">
+                    <button class="send-btn" onclick="sendFollowup()">Kirim</button>
                 </div>
                 <button class="share-btn" onclick="shareWhatsApp()">📤 Bagikan ke WhatsApp</button>
                 <p class="disclaimer">⚠️ Hanya untuk edukasi. Jika mendesak, segera ke dokter.</p>
@@ -233,17 +224,6 @@ let chatHistory = [];
 let lastAnswer = "";
 let currentAge = "";
 let riwayat = JSON.parse(localStorage.getItem('bc_riwayat') || '[]');
-
-const quickReplies = {
-    Dokter: ['💊 Obat yang aman', '🏥 Kapan ke dokter?', '🌿 Herbal lainnya', '🍼 Aman untuk usianya?'],
-    MPASI: ['🥄 Resep lain', '⚖️ Takaran tepat', '🤔 Bayi tidak mau makan?'],
-    Imunisasi: ['📅 Jadwal selanjutnya', '💉 Efek samping?', '🏥 Vaksin di mana?'],
-    Tumbuh: ['🎯 Stimulasi lanjutan', '⚠️ Kapan ke dokter?', '📊 Normal/tidak?'],
-    Bermain: ['🎮 Ide lain', '🛒 Bahan alternatif?', '⏱️ Berapa lama?'],
-    Tenang: ['💪 Tips lebih lanjut', '🤗 Masih khawatir', '💬 Cerita lagi'],
-    MPASI_Jadwal: ['🥣 Resep menu ini', '📅 Jadwal minggu depan'],
-    Imunisasi_Jadwal: ['💉 Info vaksin ini', '🏥 Klinik terdekat'],
-};
 
 const featureConfig = {
     Dokter: { title:'💊 Dokter Tenang', fields:['ageField','queryField'], label:'Gejala si kecil:', ph:'Contoh: demam sejak kemarin, badan anget...' },
@@ -371,22 +351,9 @@ async function callAI(payload, userText) {
         addBubbleAI(chatArea, aiText);
         if (data.herbal) addCardHerbal(chatArea, [{ cara: data.herbal, sumber: 'Kemenkes RI, IDAI' }]);
         document.getElementById('bottomArea').style.display = 'block';
-        document.getElementById('modeFollowup').style.display = 'block';
-        renderQuickBtns();
         saveRiwayat(featureConfig[currentMode].title, userText, aiText);
     } catch(err) { typing.remove(); addBubbleAI(chatArea, 'Gagal: ' + err.message); }
     chatArea.scrollTop = chatArea.scrollHeight;
-}
-
-function renderQuickBtns() {
-    const btns = quickReplies[currentMode] || [];
-    document.getElementById('followupLabel').textContent = btns.length ? 'Masih ada yang ingin ditanyakan?' : '';
-    document.getElementById('quickBtns').innerHTML = btns.map(b => `<button class="qbtn" onclick="sendQuick('${b}')">${b}</button>`).join('');
-}
-
-function sendQuick(text) {
-    document.getElementById('followupInput').value = '';
-    callAI({ mode:currentMode, query:text, age:document.getElementById('childAge').value, playType:document.getElementById('playType').value }, text);
 }
 
 function sendFollowup() {
@@ -428,8 +395,6 @@ function showRiwayat(i) {
     chatArea.style.display = 'flex'; chatArea.innerHTML = '';
     addBubbleAI(chatArea, item.answer);
     document.getElementById('bottomArea').style.display = 'block';
-    document.getElementById('modeFollowup').style.display = 'block';
-    renderQuickBtns();
 }
 
 document.addEventListener('keydown', e => {
