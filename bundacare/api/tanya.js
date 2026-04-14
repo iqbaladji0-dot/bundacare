@@ -71,20 +71,17 @@ Format tabel: Usia | Vaksin | Keterangan. Tambah catatan penting di akhir.`;
   let contents = [];
 
   if (history && history.length > 0) {
-    // Selalu include systemPrompt di pesan pertama history
     const firstUserMsg = history[0];
     contents.push({
       role: 'user',
       parts: [{ text: `${systemPrompt}\n\n${firstUserMsg.text}` }]
     });
-    // Lanjutkan sisa history
     for (let i = 1; i < history.length; i++) {
       contents.push({
         role: history[i].role,
         parts: [{ text: history[i].text }]
       });
     }
-    // Tambahkan pertanyaan terbaru
     contents.push({
       role: 'user',
       parts: [{ text: query }]
@@ -94,6 +91,30 @@ Format tabel: Usia | Vaksin | Keterangan. Tambah catatan penting di akhir.`;
       role: 'user',
       parts: [{ text: `${systemPrompt}\n\n${query}` }]
     });
+  }
+
+  // Fungsi retry untuk Gemini
+  async function callGemini(body, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }
+      );
+
+      if (response.ok) return response;
+
+      const status = response.status;
+      if ((status === 503 || status === 429) && attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt)); // tunggu 1s, 2s, 3s
+        continue;
+      }
+
+      return response;
+    }
   }
 
   // Herbal prompt khusus Dokter (hanya pertanyaan pertama)
@@ -109,46 +130,34 @@ Wajib tambahkan sumber terpercaya (Kemenkes RI, IDAI, atau WHO).
 Akhiri dengan disclaimer 1 kalimat bahwa ini hanya pendamping, bukan pengganti dokter.
 Jawab singkat, maksimal 4 poin.`;
 
-      const herbalRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: herbalPrompt }] }]
-          })
-        }
-      );
-      const herbalData = await herbalRes.json();
-      herbalText = herbalData.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      const herbalRes = await callGemini({
+        contents: [{ role: 'user', parts: [{ text: herbalPrompt }] }]
+      });
+      if (herbalRes && herbalRes.ok) {
+        const herbalData = await herbalRes.json();
+        herbalText = herbalData.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      }
     } catch(e) {
       herbalText = null;
     }
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents })
-      }
-    );
+    const response = await callGemini({ contents });
 
     const rawText = await response.text();
     if (!response.ok) {
-      return res.status(200).json({ text: `Error Gemini ${response.status}: ${rawText.substring(0, 200)}` });
+      return res.status(200).json({ text: `Maaf Bunda, BundaCare sedang sibuk. Coba lagi sebentar ya 🙏` });
     }
 
     const data = JSON.parse(rawText);
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respons.";
-    
-    return res.status(200).json({ 
+
+    return res.status(200).json({
       text,
       herbal: herbalText
     });
   } catch (err) {
-    return res.status(200).json({ text: "Error: " + err.message });
+    return res.status(200).json({ text: "Maaf Bunda, terjadi gangguan koneksi. Coba lagi ya 🙏" });
   }
 }
